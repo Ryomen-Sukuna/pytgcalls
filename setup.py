@@ -1,5 +1,5 @@
 import os
-import site
+import sys
 
 from setuptools import setup
 from setuptools.command.install import install
@@ -22,6 +22,11 @@ class PostInstall(install):
 
     # noinspection PyBroadException
     def run(self):
+        if sys.platform.startswith('win'):
+            raise Exception(
+                'Installation from GitHub isn\'t supported on your platform.'
+                '\nInstall with\n\npip3 install py-tgcalls -U',
+            )
         node_result = self.get_version('node')
         npm_result = self.get_version('npm')
         if node_result['version_int'] == 0:
@@ -41,55 +46,59 @@ class PostInstall(install):
                 f"{npm_result['version']}",
             )
         os.system('npm install')
-        os.system('npm install --prefix pytgcalls/js/')
+        folder_package = ''
+        for item in sys.path:
+            if 'dist-packages' in item or 'site-packages' in item:
+                folder_package = item
+                break
         if 'pip' in os.getcwd():
             print(
                 'Copying files from '
                 f'{os.getcwd()}/pytgcalls/'
                 ' to '
-                f'{site.getsitepackages()[0]}/pytgcalls/',
+                f'{folder_package}/pytgcalls/',
             )
             if not os.path.exists(
-                f'{site.getsitepackages()[0]}/pytgcalls',
+                f'{folder_package}/pytgcalls',
             ):
                 os.system(
                     'mkdir '
-                    f'{site.getsitepackages()[0]}/pytgcalls',
-                )
-            if not os.path.exists(
-                f'{site.getsitepackages()[0]}/pytgcalls/js',
-            ):
-                os.system(
-                    'mkdir '
-                    f'{site.getsitepackages()[0]}'
-                    '/pytgcalls/js',
+                    f'{folder_package}/pytgcalls',
                 )
             if os.path.exists(
-                f'{site.getsitepackages()[0]}/pytgcalls/js/lib',
+                    f'{folder_package}/pytgcalls/dist',
             ):
                 os.system(
                     'rm -r '
-                    f'{site.getsitepackages()[0]}'
-                    '/pytgcalls/js/lib',
+                    f'{folder_package}'
+                    '/pytgcalls/dist',
                 )
             if os.path.exists(
-                f'{site.getsitepackages()[0]}'
-                '/pytgcalls/js/node_modules',
+                    f'{folder_package}'
+                    '/pytgcalls/node_modules',
             ):
                 os.system(
                     'rm -r '
-                    f'{site.getsitepackages()[0]}'
-                    '/pytgcalls/js/node_modules',
+                    f'{folder_package}'
+                    '/pytgcalls/node_modules',
                 )
             os.system(
-                'cp -r '
-                f'{os.getcwd()}/pytgcalls/js/lib '
-                f'{site.getsitepackages()[0]}/pytgcalls/js/',
+                'cp -r node_modules/ '
+                f'{folder_package}/pytgcalls/node_modules',
             )
             os.system(
-                'cp -r '
-                'pytgcalls/js/node_modules '
-                f'{site.getsitepackages()[0]}/pytgcalls/js/',
+                'cp -r pytgcalls/dist/ '
+                f'{folder_package}/pytgcalls/dist',
+            )
+        elif 'bdist_wheel' in sys.argv[2]:
+            if os.path.exists(
+                'pytgcalls/node_modules/',
+            ):
+                os.system(
+                    'rm -r pytgcalls/node_modules/',
+                )
+            os.system(
+                'cp -r node_modules/ pytgcalls/node_modules/',
             )
         install.run(self)
 

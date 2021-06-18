@@ -5,8 +5,26 @@
 # PyTgCalls
 
 [![pre-commit.ci status][pre-commit.ci-badge]][pre-commit.ci]
+[![PyPI](https://img.shields.io/pypi/v/py-tgcalls.svg?style=flat)](https://pypi.org/project/py-tgcalls/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/py-tgcalls)](https://www.python.org/)
+[![GitHub](https://img.shields.io/github/license/pytgcalls/pytgcalls)](https://github.com/pytgcalls/pytgcalls/blob/master/LICENSE)
+![OS](https://img.shields.io/badge/platform-Linux%20%7C%20WSL2.0%20%7C%20Windows-lightgrey)
+[![Node Version](https://img.shields.io/badge/node-%3E%20%3D%2015.0.0%20-brightgreen)](https://nodejs.org/it/)
 
-This project allow to make Telegram group call with MTProto Api using Program and WebRTC, this is possible thanks to the power of NodeJS's WebRTC library, socketio-client and [@evgeny-nadymov]
+This project allow to make Telegram group call with MTProto Api using Pyrogram and WebRTC, this is possible thanks to the power of NodeJS's WebRTC library, socketio-client and [@evgeny-nadymov]
+
+# Common Problems
+
+## Problem with pyrogram?
+If do you have problems with pyrogram, reinstall by this command
+``` bash
+pip install git+https://github.com/pyrogram/pyrogram -U
+```
+
+## Live stream or ffmpeg live conversion stopped?
+Check before if is changing the size of file(Is a method to check if ffmpeg is alive).
+
+If is alive and stream is stopped, report to the issue with including last ultra verbose log and put in to nekobin.
 
 ## Docs
 
@@ -22,12 +40,6 @@ pip install git+https://github.com/pytgcalls/pytgcalls -U
 
 # With PyPi
 pip install py-tgcalls -U
-```
-
-## Problem with pyrogram?
-If do you have problems with pyrogram, reinstall by this command
-``` bash
-pip install git+https://github.com/pyrogram/pyrogram -U
 ```
 
 ## Conversion commands

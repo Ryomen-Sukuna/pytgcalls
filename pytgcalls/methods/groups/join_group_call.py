@@ -18,6 +18,7 @@ class JoinGroupCall(SpawnProcess):
             chat_id: int,
             file_path: str,
             bitrate: int = 48000,
+            invite_hash: str = None,
             join_as: InputPeer = None,
             stream_type: StreamType = None,
     ):
@@ -27,6 +28,8 @@ class JoinGroupCall(SpawnProcess):
             stream_type = StreamType().local_stream
         if stream_type.stream_mode == 0:
             raise Exception('Error internal: INVALID_STREAM_MODE')
+        if os.path.getsize(file_path) == 0:
+            raise Exception('Error internal: INVALID_FILE_STREAM')
         self.pytgcalls._cache_user_peer[chat_id] = join_as
         bitrate = 48000 if bitrate > 48000 else bitrate
         if (
@@ -39,22 +42,23 @@ class JoinGroupCall(SpawnProcess):
                 self._spawn_process(
                     requests.post,
                     (
-                        f'http://'
+                        'http://'
                         f'{self.pytgcalls._host}:'
                         f'{self.pytgcalls._port}/'
-                        f'api_internal',
+                        'api_internal',
                         json.dumps({
                             'action': 'join_call',
                             'chat_id': chat_id,
                             'file_path': file_path,
+                            'invite_hash': invite_hash,
                             'bitrate': bitrate,
                             'buffer_long': stream_type.stream_mode,
                             'session_id': self.pytgcalls._session_id,
                         }),
                     ),
                 )
-            except Exception:
-                raise Exception('Error internal: NOT_IN_GROUP')
+            except Exception as e:
+                raise Exception('Error internal: UNKNOWN ->', e)
         else:
             code_err = 'PYROGRAM_CLIENT_IS_NOT_RUNNING'
             if not self.pytgcalls._init_js_core:

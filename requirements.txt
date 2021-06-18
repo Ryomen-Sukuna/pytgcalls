@@ -1,7 +1,9 @@
 aiohttp
 asyncio
 Naked
+psutil
 pyrogram
 python-socketio
 requests
+types-requests
 tgcrypto

@@ -1,4 +1,5 @@
 import os
+from time import time
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -6,7 +7,9 @@ from typing import List
 from pyrogram import __version__
 from pyrogram import Client
 from pyrogram.raw.types import ChannelForbidden
+from pyrogram.raw.types import GroupCall
 from pyrogram.raw.types import GroupCallDiscarded
+from pyrogram.raw.types import InputGroupCall
 from pyrogram.raw.types import MessageActionInviteToGroupCall
 from pyrogram.raw.types import UpdateChannel
 from pyrogram.raw.types import UpdateGroupCall
@@ -21,6 +24,7 @@ class PyTgCalls(Methods):
         app: Client,
         port: int = 24859,
         log_mode: int = 0,
+        flood_wait_cache: int = 120,
     ):
         self._app = app
         self._app_core = None
@@ -46,6 +50,7 @@ class PyTgCalls(Methods):
         self._cache_user_peer: Dict[int, Dict] = {}
         self._cache_full_chat: Dict[int, Dict] = {}
         self._cache_local_peer = None
+        self._flood_wait_cache = flood_wait_cache
         super().__init__(self)
 
     @staticmethod
@@ -81,11 +86,10 @@ class PyTgCalls(Methods):
                     'actually installed is '
                     f"{node_result['version']}",
                 )
-            if int(__version__.split('.')[2]) < 13 and \
-                    int(__version__.split('.')[1]) == 1 and \
+            if int(__version__.split('.')[1]) < 2 and \
                     int(__version__.split('.')[0]) == 1:
                 raise Exception(
-                    'Needed pyrogram 1.1.13+, '
+                    'Needed pyrogram 1.2.0+, '
                     'actually installed is '
                     f'{__version__}',
                 )
@@ -93,6 +97,23 @@ class PyTgCalls(Methods):
                 # noinspection PyBroadException
                 @self._app.on_raw_update()
                 async def on_close(client, update, _, data2):
+                    if isinstance(update, UpdateGroupCall):
+                        if isinstance(update.call, GroupCallDiscarded):
+                            chat_id = int(f'-100{update.chat_id}')
+                            self._cache_full_chat[chat_id] = {
+                                'last_update': int(time()),
+                                'full_chat': None,
+                            }
+                        if isinstance(update.call, GroupCall):
+                            input_group_call = InputGroupCall(
+                                access_hash=update.call.access_hash,
+                                id=update.call.id,
+                            )
+                            chat_id = int(f'-100{update.chat_id}')
+                            self._cache_full_chat[chat_id] = {
+                                'last_update': int(time()),
+                                'full_chat': input_group_call,
+                            }
                     if isinstance(update, UpdateChannel):
                         chat_id = int(f'-100{update.channel_id}')
                         if len(data2) > 0:
@@ -179,7 +200,7 @@ class PyTgCalls(Methods):
                 self._spawn_process(
                     self._run_js,
                     (
-                        f'{__file__.replace("pytgcalls.py", "")}js/core.js',
+                        f'{__file__.replace("pytgcalls.py", "")}dist/index.js',
                         f'port={self._port} log_mode={self._log_mode}',
                     ),
                 )
